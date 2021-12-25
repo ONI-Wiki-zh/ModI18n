@@ -19,5 +19,9 @@ To install locally, please download the latest zip file on the [release page](ht
 2. ModI18n will download latest translations files for you. The translation files are downloaded to `mods/i18n`. To suppress this behavior (e.g. for testing your own translations), you can set "Use Local Translations Only" to true in the in-game mod options.
 3. ModI18n should try to override translations loaded by other mods. If it fails (which is unlikely), you can try to reorder your mod list so that this mod is at the end.
 
+# Modder opt-out
+The following modders don't want their mods to be translated without thier supervision. Therefore this repo can't provide translation for their mods.
+* Cairath
+
 # Build
 Please read [Cairath's ONI Modding guide](https://github.com/Cairath/Oxygen-Not-Included-Modding/wiki) for mod development knowledge.
