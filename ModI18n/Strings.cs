@@ -20,7 +20,7 @@ namespace ModI18n
             {
                 public static LocString NAME = "Use Local Translations Only";
                 public static LocString DESC = "ModI18n will fetch the latest translation files online when started. " +
-                    "If field, it will try to find local translations to load. " +
+                    "If fails, it will try to find local translations to load. " +
                     "If set to true, ModI18n will skip downloading translation files.";
             }
         }
