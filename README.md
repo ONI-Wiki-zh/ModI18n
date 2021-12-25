@@ -15,8 +15,9 @@ To install locally, please download the latest zip file on the [release page](ht
   - Mac: `~/Library/Application Support/unity.Klei.Oxygen Not Included/mods/Local`
 
 # Useage
-1. For the best result, it is suggested to reorder your mod list so that this mod is at the end.
-2. You can change your preferred language in the mod options in the game. If you change it, please restart the game to load new translations.
+1. If your language is one of the officially supported language, ModI18n should be able to detect your language and load translations for you. The language that ModI18n loads can be configured in the in-game mod options. If you change it, please restart the game to load new translations.
+2. ModI18n will download latest translations files for you. The translation files are downloaded to `mods/i18n`. To suppress this behavior (e.g. for testing your own translations), you can set "Use Local Translations Only" to true in the in-game mod options.
+3. ModI18n should try to override translations loaded by other mods. If it fails (which is unlikely), you can try to reorder your mod list so that this mod is at the end.
 
 # Build
 Please read [Cairath's ONI Modding guide](https://github.com/Cairath/Oxygen-Not-Included-Modding/wiki) for mod development knowledge.
