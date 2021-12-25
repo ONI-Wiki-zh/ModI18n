@@ -1,13 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using PeterHan.PLib.Options;
-
-using KMod;
 using static Localization;
 
 namespace ModI18n
@@ -19,6 +11,10 @@ namespace ModI18n
         [Option("ModI18n.STRINGS.OPTIONS.LANG.NAME", "ModI18n.STRINGS.OPTIONS.LANG.DESC")]
         [JsonProperty]
         public LANG PreferedLanguage { get; set; } = LANG.en;
+
+        [Option("ModI18n.STRINGS.OPTIONS.LOCAL_ONLY.NAME", "ModI18n.STRINGS.OPTIONS.LOCAL_ONLY.DESC")]
+        [JsonProperty]
+        public bool LocalOnly { get; set; } = false;
 
         public I18nOptions()
         {

@@ -59,23 +59,62 @@ namespace ModI18n
     // TODO: add all lang
     public enum LANG
     {
-        //[Lang("aa", "Qafár af")]
-        //aa,
+        [Lang("cs", "čeština")]
+        cs,
+        [Lang("de", "Deutsch")]
+        de,
+        [Lang("da", "dansk")]
+        da, // Danish
+        [Lang("el", "Ελληνικά")]
+        el,
         [Lang("en", "English")]
         en,
-
+        [Lang("es", "Español")]
+        es,
+        [Lang("fi", "suomi")]
+        fi,
+        [Lang("fr", "français")]
+        fr,
+        [Lang("gl", "galego")]
+        gl, // Galician
+        [Lang("hu", "magyar")]
+        hu,
+        [Lang("id", "Bahasa Indonesia")]
+        id,
+        [Lang("it", "italiano")]
+        it,
+        [Lang("jp", "日本語")]
+        jp,
         [Lang("ko", "한국어")]
         ko,
-
+        [Lang("lt", "lietuvių")]
+        lt, // Lithuanian
+        [Lang("nl", "Nederlands")]
+        nl, // Dutch
+        [Lang("pl", "polski")]
+        pl,
+        [Lang("pt", "português")]
+        pt,
+        [Lang("pt-br", "português do Brasil")]
+        pt_br,
         [Lang("ru", "русский")]
         ru,
-
+        [Lang("sk", "slovenčina")]
+        sk,
+        [Lang("sv", "svenska")]
+        sv,
+        [Lang("th", "ไทย")]
+        th,
+        [Lang("tr", "Türkçe")]
+        tr,
+        [Lang("uk", "українська")]
+        uk,
+        [Lang("vi", "Tiếng Việt")]
+        vi,
         [Lang("zh-hans", "中文（简体）")]
         zh_hans,
-
         [Lang("zh-hant", "中文（繁體）")]
         zh_hant,
-
     }
 
     class LANGUAGES
