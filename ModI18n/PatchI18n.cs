@@ -32,7 +32,11 @@ namespace ModI18n
                 try
                 {
                     using (var client = new System.Net.WebClient())
-                        client.DownloadFile(i18nBaseUrl + filename, path);
+                    {
+                        var ts = new System.DateTimeOffset(System.DateTime.UtcNow).ToUnixTimeSeconds().ToString();
+                        client.CachePolicy = new System.Net.Cache.RequestCachePolicy(System.Net.Cache.RequestCacheLevel.NoCacheNoStore);
+                        client.DownloadFile($"{i18nBaseUrl}{filename}?aviod_cache={ts}", path);
+                    }
                     Debug.Log($"[ModI18n] downloaded strings: {filename}");
                 }
                 catch (System.Net.WebException)
