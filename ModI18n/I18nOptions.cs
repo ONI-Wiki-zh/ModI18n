@@ -19,7 +19,7 @@ namespace ModI18n
         public I18nOptions()
         {
             char[] sep = { '-', '_' };
-            string[] currLocaleCode = GetLocale().Code.Split(sep);
+            string[] currLocaleCode = GetLocale()?.Code?.Split(sep) ?? new string[1] { "en" };
             switch (currLocaleCode[0])
             {
                 case "ko":
