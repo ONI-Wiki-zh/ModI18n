@@ -9,10 +9,10 @@ namespace ModI18n
 {
     public class Utils
     {
-        public static string i18nBaseUrl = "https://cdn.jsdelivr.net/gh/ONI-Wiki-zh/ONIi18n@v1/dist/";
-        public static string modsDir = KMod.Manager.GetDirectory();
-        public static string stringsFolder = System.IO.Path.Combine(modsDir, "i18n");
-        public static int numToLast = 2;
+        public static readonly string i18nBaseUrl = "https://cdn.jsdelivr.net/gh/ONI-Wiki-zh/ONIi18n@v1/dist/";
+        public static readonly string modsDir = KMod.Manager.GetDirectory();
+        public static readonly string stringsFolder = System.IO.Path.Combine(modsDir, "i18n");
+        public static readonly int maxPrintCount = 3;
         public static Dictionary<string, string> translations = null;
 
         // Download and read translation file
@@ -65,11 +65,17 @@ namespace ModI18n
             OverloadStrings(translations);
 
             // used to translate mod options created by PLib
+            int printCount = maxPrintCount;
             foreach (KeyValuePair<string, string> e in translations)
             {
-                Debug.Log($"[ModI18n] String.add {e.Key} {e.Value}");
+                if (printCount > 0)
+                    Debug.Log($"[ModI18n] String.add {e.Key} {e.Value}");
                 Strings.Add(e.Key, e.Value);
+                printCount--;
             }
+            if (printCount < 0)
+                Debug.Log($"[ModI18n] ... and {-printCount} more String.add ");
+
         }
     }
     public class Patches
@@ -77,39 +83,44 @@ namespace ModI18n
         // Seems that LegacyModMain.Load is execuated later
         [HarmonyPatch(typeof(LegacyModMain), "Load")]
         //[HarmonyPatch(typeof(Db), "Initialize")]
-        [HarmonyPriority(int.MinValue)] // execuate last
         public class LegacyModMain_Patch
         {
+            [HarmonyPriority(int.MinValue)] // execuate last
             public static void Postfix() { Utils.loadStrings(); }
         }
 
         // Download and read translation file
         [HarmonyPatch(typeof(Localization), "Initialize")]
-        [HarmonyPriority(int.MaxValue)] // execuate first
         public class LocalizationInitializePatch
         {
+            [HarmonyPriority(int.MaxValue)] // execuate first
             public static void Postfix() { Utils.InitTranslations(); }
         }
 
         // It seems that LocString.CreateLocStringKeys won't work if no translation is loaded
         // As it is usually called after RegisterForTranslation, I add a patch here
         [HarmonyPatch(typeof(Localization), "RegisterForTranslation")]
-        [HarmonyPriority(int.MinValue)] // execuate at last
         public class LocalizationRegisterForTranslationPatch
         {
+            [HarmonyPriority(int.MinValue)] // execuate at last
             public static void Postfix()
             {
                 if (Utils.translations != null)
+                {
+                    Debug.Log($"[ModI18n] RegisterForTranslation with patching");
                     OverloadStrings(Utils.translations);
+                }
+                else
+                    Debug.Log($"[ModI18n] Utils.translations is null");
             }
         }
 
         // Override all OverloadStrings which other mods could used to load localization
         [HarmonyPatch(typeof(Localization), "OverloadStrings")]
         [HarmonyPatch(new System.Type[] { typeof(Dictionary<string, string>) })]
-        [HarmonyPriority(int.MinValue)] // execuate last
         public class OverloadStringsPatch
         {
+            [HarmonyPriority(int.MinValue)] // execuate last
             public static void Prefix(ref Dictionary<string, string> translated_strings)
             {
                 if (Utils.translations == null) { Debug.Log($"[ModI18n] Utils.translations not loaded"); return; }
