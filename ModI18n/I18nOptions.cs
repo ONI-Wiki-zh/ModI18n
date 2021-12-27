@@ -5,7 +5,9 @@ using static Localization;
 namespace ModI18n
 {
     [JsonObject(MemberSerialization.OptIn)]
-    [ModInfo("https://github.com/ONI-Wiki-zh/ONIi18n")]
+    [ConfigFile(IndentOutput: true)]
+    [RestartRequired()]
+    [ModInfo("https://github.com/ONI-Wiki-zh/ModI18n", "preview.png")]
     class I18nOptions
     {
         [Option("ModI18n.STRINGS.OPTIONS.LANG.NAME", "ModI18n.STRINGS.OPTIONS.LANG.DESC")]
@@ -30,6 +32,12 @@ namespace ModI18n
                     break;
                 case "zh":
                     this.PreferedLanguage = LANG.zh_hans;
+                    break;
+                case "fr":
+                    this.PreferedLanguage = LANG.fr;
+                    break;
+                case "jp":
+                    this.PreferedLanguage = LANG.jp;
                     break;
                 default:
                     break;
