@@ -77,6 +77,7 @@ namespace ModI18n
             }
             catch (FileNotFoundException)
             {
+                translations = new Dictionary<string, string>();
                 Debug.LogWarning($"[ModI18n] Failed to load locolization file: {filename}");
             }
         }
