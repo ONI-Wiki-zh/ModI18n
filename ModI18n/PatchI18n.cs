@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
+using System.Net.Cache;
 using System.Reflection;
 using HarmonyLib;
 using PeterHan.PLib.Core;
@@ -12,11 +14,36 @@ namespace ModI18n
 {
     public class Utils
     {
-        public static readonly string i18nBaseUrl = "https://cdn.jsdelivr.net/gh/ONI-Wiki-zh/ONIi18n@v1/dist/";
+        public static readonly string i18nBaseUrl = "https://cdn.jsdelivr.net/gh/ONI-Wiki-zh/ONIi18n@1/dist/";
         public static readonly string modsDir = KMod.Manager.GetDirectory();
         public static readonly string stringsFolder = Path.Combine(modsDir, "i18n");
         public static readonly int maxPrintCount = 3;
         public static Dictionary<string, string> translations = null;
+
+        public static void DownloadFile(string remoteFilename, string localFilename)
+        {
+            Stream remoteStream = null;
+            Stream localStream = null;
+            WebResponse response = null;
+
+            try
+            {
+                WebRequest request = WebRequest.Create(remoteFilename);
+                request.CachePolicy = new HttpRequestCachePolicy(HttpRequestCacheLevel.NoCacheNoStore);
+                response = request.GetResponse();
+
+                remoteStream = response.GetResponseStream();
+                localStream = File.Create(localFilename);
+                remoteStream.CopyTo(localStream);
+            }
+            finally
+            {
+                if (response != null) response.Close();
+                if (remoteStream != null) remoteStream.Close();
+                if (localStream != null) localStream.Close();
+            }
+        }
+
 
         // Download and read translation file
         public static void InitTranslations()
@@ -34,17 +61,13 @@ namespace ModI18n
             else
                 try
                 {
-                    using (var client = new System.Net.WebClient())
-                    {
-                        var ts = new DateTimeOffset(System.DateTime.UtcNow).ToUnixTimeSeconds().ToString();
-                        client.CachePolicy = new System.Net.Cache.RequestCachePolicy(System.Net.Cache.RequestCacheLevel.NoCacheNoStore);
-                        client.DownloadFile($"{i18nBaseUrl}{filename}?aviod_cache={ts}", path);
-                    }
+                    DownloadFile($"{i18nBaseUrl}{filename}", path);
                     Debug.Log($"[ModI18n] downloaded strings: {filename}");
                 }
-                catch (System.Net.WebException)
+                catch (Exception e)
                 {
                     Debug.LogWarning($"[ModI18n]Failed to fatch locolization file from: {i18nBaseUrl}{filename}");
+                    Debug.Log(e.Message);
                 }
 
             try
