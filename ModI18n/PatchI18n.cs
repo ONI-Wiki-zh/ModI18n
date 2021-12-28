@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using HarmonyLib;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
@@ -11,7 +14,7 @@ namespace ModI18n
     {
         public static readonly string i18nBaseUrl = "https://cdn.jsdelivr.net/gh/ONI-Wiki-zh/ONIi18n@v1/dist/";
         public static readonly string modsDir = KMod.Manager.GetDirectory();
-        public static readonly string stringsFolder = System.IO.Path.Combine(modsDir, "i18n");
+        public static readonly string stringsFolder = Path.Combine(modsDir, "i18n");
         public static readonly int maxPrintCount = 3;
         public static Dictionary<string, string> translations = null;
 
@@ -24,16 +27,16 @@ namespace ModI18n
             string code = LangAttribute.GetAttr(options.PreferedLanguage).code;
             bool localOnly = options.LocalOnly;
 
-            System.IO.Directory.CreateDirectory(stringsFolder);
+            Directory.CreateDirectory(stringsFolder);
             string filename = $"{code}.po";
-            string path = System.IO.Path.Combine(stringsFolder, filename);
+            string path = Path.Combine(stringsFolder, filename);
             if (localOnly) { Debug.Log("[ModI18n] LocalOnly set to true"); }
             else
                 try
                 {
                     using (var client = new System.Net.WebClient())
                     {
-                        var ts = new System.DateTimeOffset(System.DateTime.UtcNow).ToUnixTimeSeconds().ToString();
+                        var ts = new DateTimeOffset(System.DateTime.UtcNow).ToUnixTimeSeconds().ToString();
                         client.CachePolicy = new System.Net.Cache.RequestCachePolicy(System.Net.Cache.RequestCacheLevel.NoCacheNoStore);
                         client.DownloadFile($"{i18nBaseUrl}{filename}?aviod_cache={ts}", path);
                     }
@@ -49,13 +52,13 @@ namespace ModI18n
                 translations = LoadStringsFile(path, false);
                 Debug.Log($"[ModI18n] Translation init successfully: {path}");
             }
-            catch (System.IO.FileNotFoundException)
+            catch (FileNotFoundException)
             {
                 Debug.LogWarning($"[ModI18n] Failed to load locolization file: {filename}");
             }
         }
 
-        public static void loadStrings()
+        public static void LoadStrings()
         {
             string output_folder = System.IO.Path.Combine(KMod.Manager.GetDirectory(), "strings_templates");
             GenerateStringsTemplate(typeof(STRINGS), output_folder);
@@ -77,6 +80,57 @@ namespace ModI18n
                 Debug.Log($"[ModI18n] ... and {-printCount} more String.add ");
 
         }
+
+        public static object GetField(Type type, object instance, string fieldName)
+        {
+            BindingFlags bindFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
+            FieldInfo field = type.GetField(fieldName, bindFlags);
+            return field.GetValue(instance);
+        }
+
+        public static List<KeyValuePair<string, string>> CollectStrings()
+        {
+            StringTable RootTable = (StringTable)GetField(typeof(Strings), null, "RootTable");
+            Dictionary<int, string> RootTableKeyNames = (Dictionary<int, string>)GetField(typeof(StringTable), RootTable, "KeyNames");
+            Dictionary<int, StringEntry> RootTableEntries = (Dictionary<int, StringEntry>)Utils.GetField(typeof(StringTable), RootTable, "Entries");
+
+            SortedSet<string> keys = new SortedSet<string>();
+            foreach (var kv in RootTableKeyNames)
+            {
+                keys.Add(kv.Value);
+            }
+
+            List<KeyValuePair<string, string>> dict = new List<KeyValuePair<string, string>>();
+            foreach (var k in keys)
+            {
+                if (!k.StartsWith("ModI18n.") && !k.StartsWith("PeterHan.PLib.") && !translations.ContainsKey(k))
+                    dict.Add(new KeyValuePair<string, string>(k, RootTableEntries[k.GetHashCode()].String));
+            }
+            return dict;
+        }
+
+        public static void GenerateStringsTemplateForAll(string file_path)
+        {
+            using (StreamWriter streamWriter = new StreamWriter(file_path, append: false,
+                new System.Text.UTF8Encoding(encoderShouldEmitUTF8Identifier: false)))
+            {
+                streamWriter.WriteLine("msgid \"\"");
+                streamWriter.WriteLine("msgstr \"\"");
+                streamWriter.WriteLine("\"Application: Oxygen Not Included\"");
+                streamWriter.WriteLine("\"POT Version: 2.0\"");
+                streamWriter.WriteLine("");
+                foreach (var kv in CollectStrings())
+                {
+                    string msgctxt = kv.Key;
+                    string msgid = kv.Value.Replace("\"", "\\\"").Replace("\n", "\\n");
+                    streamWriter.WriteLine($"#. {msgctxt}");
+                    streamWriter.WriteLine($"msgctxt \"{msgctxt}\"");
+                    streamWriter.WriteLine($"msgid \"{msgid}\"");
+                    streamWriter.WriteLine($"msgstr \"\"");
+                    streamWriter.WriteLine("");
+                }
+            }
+        }
     }
     public class Patches
     {
@@ -86,7 +140,12 @@ namespace ModI18n
         public class LegacyModMain_Patch
         {
             [HarmonyPriority(int.MinValue)] // execuate last
-            public static void Postfix() { Utils.loadStrings(); }
+            public static void Postfix()
+            {
+                Utils.LoadStrings();
+                string output_folder = Path.Combine(KMod.Manager.GetDirectory(), "strings_templates");
+                Utils.GenerateStringsTemplateForAll(Path.Combine(output_folder, "curr_strings.pot"));
+            }
         }
 
         // Download and read translation file
@@ -117,7 +176,7 @@ namespace ModI18n
 
         // Override all OverloadStrings which other mods could used to load localization
         [HarmonyPatch(typeof(Localization), "OverloadStrings")]
-        [HarmonyPatch(new System.Type[] { typeof(Dictionary<string, string>) })]
+        [HarmonyPatch(new Type[] { typeof(Dictionary<string, string>) })]
         public class OverloadStringsPatch
         {
             [HarmonyPriority(int.MinValue)] // execuate last
