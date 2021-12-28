@@ -83,7 +83,7 @@ namespace ModI18n
 
         public static void LoadStrings()
         {
-            string output_folder = System.IO.Path.Combine(KMod.Manager.GetDirectory(), "strings_templates");
+            string output_folder = Path.Combine(KMod.Manager.GetDirectory(), "strings_templates");
             GenerateStringsTemplate(typeof(STRINGS), output_folder);
             RegisterForTranslation(typeof(STRINGS));
 
@@ -101,7 +101,20 @@ namespace ModI18n
             }
             if (printCount < 0)
                 Debug.Log($"[ModI18n] ... and {-printCount} more String.add ");
+        }
 
+        public static void overloadStringsWithPrefix(string prefix)
+        {
+            int printCount = maxPrintCount;
+            foreach (KeyValuePair<string, string> e in translations)
+            {
+                if (printCount > 0 && e.Key.StartsWith(prefix))
+                    Debug.Log($"[ModI18n] String.add {e.Key} {e.Value}");
+                Strings.Add(e.Key, e.Value);
+                printCount--;
+            }
+            if (printCount < 0)
+                Debug.Log($"[ModI18n] ... and {-printCount} more String.add ");
         }
 
         public static object GetField(Type type, object instance, string fieldName)
@@ -166,6 +179,8 @@ namespace ModI18n
             public static void Postfix()
             {
                 Utils.LoadStrings();
+                Debug.Log($"[ModI18n] Utils.LoadStrings");
+
                 string output_folder = Path.Combine(KMod.Manager.GetDirectory(), "strings_templates");
                 Utils.GenerateStringsTemplateForAll(Path.Combine(output_folder, "curr_strings.pot"));
             }
@@ -210,6 +225,20 @@ namespace ModI18n
                 foreach (var kv in Utils.translations)
                     translated_strings[kv.Key] = kv.Value;
             }
+        }
+
+        [HarmonyPatch(typeof(Assets), "SubstanceListHookup")]
+        public class SubstanceListHookupPatch
+        {
+            [HarmonyPriority(int.MinValue)] // execuate last
+            public static void Prefix() => Utils.overloadStringsWithPrefix("STRINGS.ELEMENTS.");
+        }
+
+        [HarmonyPatch(typeof(ModUtil), "AddBuildingToPlanScreen")]
+        public class AddBuildingToPlanScreenPatch
+        {
+            [HarmonyPriority(int.MinValue)] // execuate last
+            public static void Prefix() => Utils.overloadStringsWithPrefix("STRINGS.BUILDINGS.");
         }
     }
     public class I18nUserMod : KMod.UserMod2
