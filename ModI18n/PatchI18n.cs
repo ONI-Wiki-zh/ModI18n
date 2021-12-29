@@ -69,7 +69,6 @@ namespace ModI18n
                     Debug.LogWarning($"[ModI18n]Failed to fatch locolization file from: {i18nBaseUrl}{filename}");
                     Debug.Log(e.Message);
                 }
-
             try
             {
                 translations = LoadStringsFile(path, false);
@@ -109,13 +108,14 @@ namespace ModI18n
             int printCount = maxPrintCount;
             foreach (KeyValuePair<string, string> e in translations)
             {
-                if (printCount > 0 && e.Key.StartsWith(prefix))
+                if (!e.Key.StartsWith(prefix)) continue;
+                if (printCount > 0)
                     Debug.Log($"[ModI18n] String.add {e.Key} {e.Value}");
                 Strings.Add(e.Key, e.Value);
                 printCount--;
             }
             if (printCount < 0)
-                Debug.Log($"[ModI18n] ... and {-printCount} more String.add ");
+                Debug.Log($"[ModI18n] ... and {-printCount} more String.add with prefix '{prefix}'");
         }
 
         public static object GetField(Type type, object instance, string fieldName)
@@ -127,22 +127,34 @@ namespace ModI18n
 
         public static List<KeyValuePair<string, string>> CollectStrings()
         {
+            string vanillaStrginsTemplate = Path.Combine(UnityEngine.Application.streamingAssetsPath, "strings", "strings_template.pot");
+            Debug.Log(vanillaStrginsTemplate);
+            Dictionary<string, string> vanillaStrgins = LoadStringsFile(vanillaStrginsTemplate, true);
+
             StringTable RootTable = (StringTable)GetField(typeof(Strings), null, "RootTable");
             Dictionary<int, string> RootTableKeyNames = (Dictionary<int, string>)GetField(typeof(StringTable), RootTable, "KeyNames");
-            Dictionary<int, StringEntry> RootTableEntries = (Dictionary<int, StringEntry>)Utils.GetField(typeof(StringTable), RootTable, "Entries");
+            Dictionary<int, StringEntry> RootTableEntries = (Dictionary<int, StringEntry>)GetField(typeof(StringTable), RootTable, "Entries");
 
             SortedSet<string> keys = new SortedSet<string>();
             foreach (var kv in RootTableKeyNames)
-            {
                 keys.Add(kv.Value);
-            }
 
             List<KeyValuePair<string, string>> dict = new List<KeyValuePair<string, string>>();
             foreach (var k in keys)
             {
-                if (!k.StartsWith("ModI18n.") && !k.StartsWith("PeterHan.PLib.") && !translations.ContainsKey(k))
+                if (!vanillaStrgins.ContainsKey(k)
+                    && !k.StartsWith("PeterHan.PLib.")
+                    && !k.StartsWith("ModI18n.")
+                    // some Klei's mistake
+                    && !k.StartsWith("STRINGS.BUILDINGS.DAMAGESOURCESDAMAGESOURCES.")
+                    && !k.StartsWith("STRINGS.BUILDINGS.DISINFECTABLEDISINFECTABLE.")
+                    && !k.StartsWith("STRINGS.BUILDINGS.REPAIRABLEREPAIRABLE.")
+                    // empty strings
+                    && RootTableEntries[k.GetHashCode()].String?.Length > 0
+                    )
                     dict.Add(new KeyValuePair<string, string>(k, RootTableEntries[k.GetHashCode()].String));
             }
+            Debug.Log($"[ModI18n] Collected {dict.Count} strings");
             return dict;
         }
 
@@ -180,10 +192,10 @@ namespace ModI18n
             public static void Postfix()
             {
                 Utils.LoadStrings();
-                Debug.Log($"[ModI18n] Utils.LoadStrings");
+                Debug.Log($"[ModI18n] Strings loaded in LegacyModMain.Load");
 
                 string output_folder = Path.Combine(KMod.Manager.GetDirectory(), "strings_templates");
-                Utils.GenerateStringsTemplateForAll(Path.Combine(output_folder, "curr_strings.pot"));
+                Utils.GenerateStringsTemplateForAll(Path.Combine(output_folder, "curr_mods_templates.pot"));
             }
         }
 
@@ -237,6 +249,13 @@ namespace ModI18n
 
         [HarmonyPatch(typeof(ModUtil), "AddBuildingToPlanScreen")]
         public class AddBuildingToPlanScreenPatch
+        {
+            [HarmonyPriority(int.MinValue)] // execuate last
+            public static void Prefix() => Utils.overloadStringsWithPrefix("STRINGS.BUILDINGS.");
+        }
+
+        [HarmonyPatch(typeof(GeneratedBuildings), "LoadGeneratedBuildings")]
+        public class LoadGeneratedBuildingsPatch
         {
             [HarmonyPriority(int.MinValue)] // execuate last
             public static void Prefix() => Utils.overloadStringsWithPrefix("STRINGS.BUILDINGS.");
