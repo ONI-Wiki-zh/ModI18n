@@ -1,7 +1,9 @@
 # ModI18n
 ModI18n is a mod for mod localization. It fetches translation files when starting to ensure you have the latest translation available.
 
-This repository is for the mod code itself. To contribute translations managed by this mod, please go to [ONIi18n](https://github.com/ONI-Wiki-zh/ONIi18n).
+I have the idea of this project when I tried to translate a mod. I noticed that the author of my target mod is inactive: the last steam workshop comment from its author was months ago and its corresponding GitHub repo had open issues. That really discouraged from translating that mod. I also notice that some gamers are sharing the dll files of mods with their translations because they thought it was hard to contact the original modders. Translating mods in this way not only requires the codding skills of the translator, but also is risky in terms of copyright... So I have the idea of a translation platform and discussed it in the Discord server with other modders, where Aki and Romen added that this mod will also prevent problems of updated mods on steam. Many implementation details are also discussed there. Finally it comes out and I hope this project can help both modders and non-English gamers (it can also help English gamers if the mod is natively non-English).  
+
+This repository is for the mod code itself. To contribute translations managed by this mod, please go to [ONIi18n](https://github.com/ONI-Wiki-zh/ONIi18n) there translated texts are hosted.
 
 *Read this in other languages: [简体中文](README.zh-hans.md)*
 
