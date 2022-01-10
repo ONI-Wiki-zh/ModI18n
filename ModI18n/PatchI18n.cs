@@ -103,7 +103,7 @@ namespace ModI18n
                 Debug.Log($"[ModI18n] ... and {-printCount} more String.add ");
         }
 
-        public static void overloadStringsWithPrefix(string prefix)
+        public static void LoadStringsWithPrefix(string prefix)
         {
             int printCount = maxPrintCount;
             foreach (KeyValuePair<string, string> e in translations)
@@ -244,22 +244,75 @@ namespace ModI18n
         public class SubstanceListHookupPatch
         {
             [HarmonyPriority(int.MinValue)] // execuate last
-            public static void Prefix() => Utils.overloadStringsWithPrefix("STRINGS.ELEMENTS.");
+            public static void Prefix() => Utils.LoadStringsWithPrefix("STRINGS.ELEMENTS.");
         }
 
         [HarmonyPatch(typeof(ModUtil), "AddBuildingToPlanScreen")]
         public class AddBuildingToPlanScreenPatch
         {
             [HarmonyPriority(int.MinValue)] // execuate last
-            public static void Prefix() => Utils.overloadStringsWithPrefix("STRINGS.BUILDINGS.");
+            public static void Prefix() => Utils.LoadStringsWithPrefix("STRINGS.BUILDINGS.");
         }
 
         [HarmonyPatch(typeof(GeneratedBuildings), "LoadGeneratedBuildings")]
         public class LoadGeneratedBuildingsPatch
         {
             [HarmonyPriority(int.MinValue)] // execuate last
-            public static void Prefix() => Utils.overloadStringsWithPrefix("STRINGS.BUILDINGS.");
+            public static void Prefix() => Utils.LoadStringsWithPrefix("STRINGS.BUILDINGS.");
         }
+
+        [HarmonyPatch(typeof(EntityConfigManager), "LoadGeneratedEntities")]
+        public class LoadGeneratedEntitiesPatch
+        {
+            [HarmonyPriority(int.MinValue)] // execuate last
+            public static void Prefix() => Utils.LoadStrings();
+        }
+
+        [HarmonyPatch(typeof(EntityTemplates), "CreateLooseEntity")]
+        public class CreateLooseEntityPatch
+        {
+            [HarmonyPriority(int.MinValue)] // execuate last
+            public static void Prefix(string id, ref string name, ref string desc)
+            {
+                string foodNameCode = $"STRINGS.ITEMS.FOOD.{id.ToUpperInvariant()}.NAME";
+                string foodDescCode = $"STRINGS.ITEMS.FOOD.{id.ToUpperInvariant()}.DESC";
+                if (Utils.translations.ContainsKey(foodNameCode))
+                    name = Utils.translations[foodNameCode];
+                if (Utils.translations.ContainsKey(foodDescCode))
+                    desc = Utils.translations[foodDescCode];
+            }
+        }
+
+        [HarmonyPatch(typeof(EntityTemplates), "CreatePlacedEntity")]
+        public class CreatePlacedEntityPatch
+        {
+            [HarmonyPriority(int.MinValue)] // execuate last
+            public static void Prefix(string id, ref string name, ref string desc)
+            {
+                string creaturesNameCode = $"STRINGS.CREATURES.SPECIES.{id.ToUpperInvariant()}.NAME";
+                string creaturesDescCode = $"STRINGS.CREATURES.SPECIES.{id.ToUpperInvariant()}.DESC";
+                if (Utils.translations.ContainsKey(creaturesNameCode))
+                    name = Utils.translations[creaturesNameCode];
+                if (Utils.translations.ContainsKey(creaturesDescCode))
+                    desc = Utils.translations[creaturesDescCode];
+            }
+        }
+
+        [HarmonyPatch(typeof(EntityTemplates), "CreateAndRegisterSeedForPlant")]
+        public class CreateAndRegisterSeedForPlantPatch
+        {
+            [HarmonyPriority(int.MinValue)] // execuate last
+            public static void Prefix(string id, ref string name, ref string desc)
+            {
+                string seedNameCode = $"STRINGS.CREATURES.SPECIES.SEEDS.{id.ToUpperInvariant()}.NAME";
+                string seedDescCode = $"STRINGS.CREATURES.SPECIES.SEEDS.{id.ToUpperInvariant()}.DESC";
+                if (Utils.translations.ContainsKey(seedNameCode))
+                    name = Utils.translations[seedNameCode];
+                if (Utils.translations.ContainsKey(seedDescCode))
+                    desc = Utils.translations[seedDescCode];
+            }
+        }
+
     }
     public class I18nUserMod : KMod.UserMod2
     {
