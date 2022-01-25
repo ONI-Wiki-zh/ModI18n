@@ -19,6 +19,7 @@ namespace ModI18n
         public static readonly string stringsFolder = Path.Combine(modsDir, "i18n");
         public static readonly int maxPrintCount = 3;
         public static Dictionary<string, string> translations = null;
+        public static string templatesFolder = Path.Combine(KMod.Manager.GetDirectory(), "strings_templates", "ModI18n");
 
         public static void DownloadFile(string remoteFilename, string localFilename)
         {
@@ -83,8 +84,7 @@ namespace ModI18n
 
         public static void LoadStrings()
         {
-            string output_folder = Path.Combine(KMod.Manager.GetDirectory(), "strings_templates");
-            GenerateStringsTemplate(typeof(STRINGS), output_folder);
+            GenerateStringsTemplate(typeof(STRINGS), templatesFolder);
             RegisterForTranslation(typeof(STRINGS));
 
             InitTranslations();
@@ -160,6 +160,7 @@ namespace ModI18n
 
         public static void GenerateStringsTemplateForAll(string file_path)
         {
+            Directory.CreateDirectory(Path.GetDirectoryName(file_path));
             using (StreamWriter streamWriter = new StreamWriter(file_path, append: false,
                 new System.Text.UTF8Encoding(encoderShouldEmitUTF8Identifier: false)))
             {
@@ -193,9 +194,7 @@ namespace ModI18n
             {
                 Utils.LoadStrings();
                 Debug.Log($"[ModI18n] Strings loaded in LegacyModMain.Load");
-
-                string output_folder = Path.Combine(KMod.Manager.GetDirectory(), "strings_templates");
-                Utils.GenerateStringsTemplateForAll(Path.Combine(output_folder, "curr_mods_templates.pot"));
+                Utils.GenerateStringsTemplateForAll(Path.Combine(Utils.templatesFolder, "curr_mods_templates.pot"));
             }
         }
 
@@ -215,7 +214,8 @@ namespace ModI18n
             [HarmonyPriority(int.MinValue)] // execuate at last
             public static void Postfix()
             {
-                if (Utils.translations != null)
+                if (new System.Diagnostics.StackFrame(2).GetMethod().Name == "OnAllModsLoaded") { }
+                else if (Utils.translations != null)
                 {
                     Debug.Log($"[ModI18n] RegisterForTranslation with patching");
                     OverloadStrings(Utils.translations);
@@ -322,6 +322,43 @@ namespace ModI18n
             PUtil.InitLibrary(false);
             new PLocalization().Register();
             new POptions().RegisterOptions(this, typeof(I18nOptions));
+        }
+
+        public override void OnAllModsLoaded(Harmony harmony, IReadOnlyList<KMod.Mod> mods)
+        {
+            base.OnAllModsLoaded(harmony, mods);
+            var start = System.DateTime.Now;
+            Directory.CreateDirectory(Path.GetDirectoryName(Utils.templatesFolder));
+
+            foreach (KMod.Mod mod in mods)
+            {
+                if (mod.title == "ModI18n") continue;
+                if (!mod.IsActive()) continue;
+                if (mod.status == KMod.Mod.Status.Installed)
+                {
+                    Debug.Log($"[ModI18n] Detected active mod {mod.title}");
+                    foreach (Assembly assem in mod.loaded_mod_data.dlls)
+                    {
+                        Debug.Log($"[ModI18n] Detected mod assem: {assem.FullName}");
+                        HashSet<string> nss = new HashSet<string>();
+                        foreach (Type t in assem.GetTypes())
+                            if (!nss.Contains(t.Namespace))
+                                try
+                                {
+                                    nss.Add(t.Namespace);
+                                    // only namesapce and assem matters for register and generating
+                                    GenerateStringsTemplate(t, Utils.templatesFolder);
+                                    RegisterForTranslation(t);
+                                }
+                                catch (Exception e)
+                                {
+                                    Debug.LogWarning($"[ModI18n] Error when generating template for ns {t.Namespace} of {assem.FullName}: {e.Message} {e.StackTrace}");
+                                }
+                    }
+                }
+            }
+            Utils.LoadStrings();
+            Debug.Log($"[ModI18n] Used {(System.DateTime.Now - start).TotalSeconds} seconds to generate string templates OnAllModsLoaded!");
         }
     }
 }
