@@ -248,6 +248,13 @@ namespace ModI18n
         }
 
         [HarmonyPatch(typeof(ModUtil), "AddBuildingToPlanScreen")]
+        [HarmonyPatch(new Type[] {
+            typeof(HashedString),
+            typeof(string),
+            typeof(string),
+            typeof(string),
+            typeof(ModUtil.BuildingOrdering)
+        })]
         public class AddBuildingToPlanScreenPatch
         {
             [HarmonyPriority(int.MinValue)] // execuate last
@@ -342,18 +349,24 @@ namespace ModI18n
                         Debug.Log($"[ModI18n] Detected mod assem: {assem.FullName}");
                         HashSet<string> nss = new HashSet<string>();
                         foreach (Type t in assem.GetTypes())
+                        {
                             if (!nss.Contains(t.Namespace))
                                 try
                                 {
                                     nss.Add(t.Namespace);
                                     // only namesapce and assem matters for register and generating
                                     GenerateStringsTemplate(t, Utils.templatesFolder);
-                                    RegisterForTranslation(t);
                                 }
                                 catch (Exception e)
                                 {
                                     Debug.LogWarning($"[ModI18n] Error when generating template for ns {t.Namespace} of {assem.FullName}: {e.Message} {e.StackTrace}");
                                 }
+                            try
+                            {
+                                RegisterForTranslation(t);
+                            }
+                            catch { }
+                        }
                     }
                 }
             }
