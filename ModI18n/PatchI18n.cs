@@ -8,7 +8,9 @@ using HarmonyLib;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
 using PeterHan.PLib.Options;
+using UnityEngine;
 using static Localization;
+using static ModI18n.Patches;
 
 namespace ModI18n
 {
@@ -290,7 +292,15 @@ namespace ModI18n
             }
         }
 
-        [HarmonyPatch(typeof(EntityTemplates), "CreatePlacedEntity")]
+        //[HarmonyPatch(typeof(EntityTemplates), "CreatePlacedEntity",
+        //    new Type[] 
+        //{ typeof(string),typeof(string),typeof(string),
+        //    typeof(float),typeof(KAnimFile),typeof(string),
+        //    typeof(Grid.SceneLayer),typeof(int),typeof(int),
+        //    typeof(EffectorValues),typeof(EffectorValues),typeof(SimHashes),
+        //    typeof( List<Tag>),typeof(float) 
+
+        //})]
         public class CreatePlacedEntityPatch
         {
             [HarmonyPriority(int.MinValue)] // execuate last
@@ -339,7 +349,7 @@ namespace ModI18n
 
             foreach (KMod.Mod mod in mods)
             {
-                if (mod.title == "ModI18n") continue;
+                if (mod.title == "ModI18nReborn") continue;
                 if (!mod.IsActive()) continue;
                 if (mod.status == KMod.Mod.Status.Installed)
                 {
@@ -369,6 +379,19 @@ namespace ModI18n
                         }
                     }
                 }
+            }
+            var allMethod = typeof(EntityTemplates).GetMethods(BindingFlags.Static | BindingFlags.Public);
+            foreach (var method in allMethod)
+            {
+                if (method.Name == "CreateAndRegisterSeedForPlant")
+                {
+                    harmony.Patch(method, prefix: new HarmonyMethod(typeof(CreateAndRegisterSeedForPlantPatch).GetMethod("Prefix")));
+                }
+                if (method.Name == "CreatePlacedEntity")
+                {
+                    harmony.Patch(method, prefix: new HarmonyMethod(typeof(CreatePlacedEntityPatch).GetMethod("Prefix")));
+                }
+
             }
             Utils.LoadStrings();
             Debug.Log($"[ModI18n] Used {(System.DateTime.Now - start).TotalSeconds} seconds to generate string templates OnAllModsLoaded!");

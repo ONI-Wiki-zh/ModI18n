@@ -4,11 +4,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("ModI18n")]
+[assembly: AssemblyTitle("ModI18nReborn")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("ModI18n")]
+[assembly: AssemblyProduct("ModI18nReborn")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
